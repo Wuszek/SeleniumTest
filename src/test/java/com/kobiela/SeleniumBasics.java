@@ -1,6 +1,7 @@
 package com.kobiela;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.apache.log4j.BasicConfigurator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -8,9 +9,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.*;
 
 import java.sql.Time;
 import java.util.concurrent.TimeUnit;
@@ -22,9 +21,10 @@ public class SeleniumBasics {
 
     @Before
     public void Setup(){
-        // Ustawienie ścieżki do ChromeDriver
+        BasicConfigurator.configure();
+        // ChromeDriver path setup
         WebDriverManager.chromedriver().setup();
-        // Uruchomienie przeglądarki
+        // Browser start
         this.webDriver = new ChromeDriver();
         this.webDriver.manage().window().maximize();
 
@@ -76,14 +76,35 @@ public class SeleniumBasics {
         WebElement passwd = webDriver.findElement(By.xpath("/html//input[@id='passwd']"));
         passwd.sendKeys("Test111");
 
-        WebElement days = webDriver.findElement(By.xpath("/html//select[@id='days']"));
-        days.sendKeys("5");
+
+
+        WebElement days = webDriver.findElement(By.name("days"));
+        Select daysDropdown =  new Select(days);
+        daysDropdown.selectByValue("5");
+
+// Works slower than method below
+//        Select monthsDropdown = new Select(webDriver.findElement(By.id("months")));
+//        monthsDropdown.selectByVisibleText("April ");
+
 
         WebElement months = webDriver.findElement(By.xpath("/html//select[@id='months']"));
         months.sendKeys("apr");
 
-        WebElement years = webDriver.findElement(By.xpath("/html//select[@id='months']"));
-        years.sendKeys("1994");
+
+        Select yearsDropdown = new Select(webDriver.findElement(By.id("years")));
+        yearsDropdown.selectByIndex(27);
+
+
+// My method
+
+//        WebElement days = webDriver.findElement(By.xpath("/html//select[@id='days']"));
+//        days.sendKeys("5");
+
+//        WebElement months = webDriver.findElement(By.xpath("/html//select[@id='months']"));
+//        months.sendKeys("apr");
+//
+//        WebElement years = webDriver.findElement(By.xpath("/html//select[@id='months']"));
+//        years.sendKeys("1994");
 
         WebElement adress = webDriver.findElement(By.cssSelector("[name='address1']"));
         adress.sendKeys("Malinowa 77");
@@ -91,8 +112,12 @@ public class SeleniumBasics {
         WebElement city = webDriver.findElement(By.cssSelector("#city"));
         city.sendKeys("Denver");
 
-        WebElement state = webDriver.findElement(By.cssSelector("#id_state"));
-        state.sendKeys("new y");
+        Select stateDropdown = new Select(webDriver.findElementByCssSelector("#id_state"));
+        stateDropdown.selectByVisibleText("New York");
+
+        Select countryDropdown = new Select(webDriver.findElementByCssSelector("#id_country"));
+        countryDropdown.selectByVisibleText("United States");
+
 
         WebElement mobilePhone = webDriver.findElement(By.cssSelector("#phone_mobile"));
         mobilePhone.sendKeys("500 500 500");
