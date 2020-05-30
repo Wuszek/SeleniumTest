@@ -3,13 +3,16 @@ package com.kobiela;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.log4j.BasicConfigurator;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.*;
+import org.junit.Assert.*;
 
 import java.sql.Time;
 import java.util.concurrent.TimeUnit;
@@ -29,9 +32,9 @@ public class SeleniumBasics {
         this.webDriver.manage().window().maximize();
 
         // Implicit wait
-        this.webDriver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
+        //this.webDriver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
         // Explicit wait
-        //this.wait = new WebDriverWait(this.webDriver, 10);
+        this.wait = new WebDriverWait(this.webDriver, 10);
 
         this.webDriver.get("http://automationpractice.com/index.php");
     }
@@ -40,7 +43,7 @@ public class SeleniumBasics {
     public void tearDown() throws InterruptedException {
         TimeUnit.SECONDS.sleep(5);
         // Wylacz przegladarke
-        this.webDriver.quit();
+        //this.webDriver.quit();
     }
 
 
@@ -115,12 +118,108 @@ public class SeleniumBasics {
         Select stateDropdown = new Select(webDriver.findElementByCssSelector("#id_state"));
         stateDropdown.selectByVisibleText("New York");
 
+        WebElement postcode = webDriver.findElement(By.cssSelector("#postcode"));
+        postcode.sendKeys("32145");
+
         Select countryDropdown = new Select(webDriver.findElementByCssSelector("#id_country"));
         countryDropdown.selectByVisibleText("United States");
 
 
         WebElement mobilePhone = webDriver.findElement(By.cssSelector("#phone_mobile"));
         mobilePhone.sendKeys("500 500 500");
+
+        WebElement registerButton = webDriver.findElement(By.cssSelector("#submitAccount"));
+        registerButton.click();
+
+    }
+
+    @Test
+    public void testLogin() throws InterruptedException {
+
+        WebElement signInButton = webDriver.findElement(By.linkText("Sign in"));
+        signInButton.click();
+
+        WebElement emailInput = webDriver.findElement(By.cssSelector("#email"));
+        emailInput.sendKeys("test@testowisko.pl");
+
+        WebElement passwdInput = webDriver.findElement(By.cssSelector("#passwd"));
+        passwdInput.sendKeys("Test111");
+
+        WebElement signIn = webDriver.findElement(By.xpath("//button[@id='SubmitLogin']/span"));
+        signIn.click();
+
+        Assert.assertEquals("My account - My Store", this.webDriver.getTitle());
+        System.out.println("Site title correct");
+
+        WebElement pageHeading = webDriver.findElement(By.className("page-heading"));
+        Assert.assertEquals(pageHeading.getText(), "MY ACCOUNT");
+
+        System.out.println("H1 value correct");
+    }
+
+    @Test
+    public void testAddToCart() throws InterruptedException {
+
+        // Actions builded
+        Actions actions = new Actions(webDriver);
+
+        WebElement womanMenuHover = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a[title='Women']")));
+        actions.moveToElement(womanMenuHover).build().perform();
+
+        WebElement tishirts = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".first-in-line-xs.submenu-container a[title='T-shirts']")));
+        actions.click(tishirts).build().perform();
+        //tishirts.click();
+
+
+        WebElement price = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".right-block > .content_price > .price.product-price")));
+        String tekst = price.getText();
+
+        WebElement hoverTishirt = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a[title='Faded Short Sleeve T-shirts'] > img[alt='Faded Short Sleeve T-shirts']")));
+        actions.moveToElement(hoverTishirt).build().perform();
+
+
+        WebElement addCart = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a[title='Add to cart'] > span")));
+        actions.click(addCart).build().perform();
+
+        // Switch to active element (chechout popup)
+        webDriver.switchTo().activeElement();
+
+        WebElement checkout = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a[title='Proceed to checkout'] > span")));
+        actions.click(checkout).build().perform();
+
+        WebElement finalprice = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("td#total_product")));
+
+        Assert.assertEquals(tekst, finalprice.getText());
+
+        WebElement finalCheckout = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("div#center_column  a[title='Proceed to checkout'] > span")));
+        actions.click(finalCheckout).build().perform();
+
+        //WebElement signInButton = webDriver.findElement(By.linkText("Sign in"));
+        //signInButton.click();
+
+        WebElement emailInput = webDriver.findElement(By.cssSelector("#email"));
+        emailInput.sendKeys("test@testowisko.pl");
+
+        WebElement passwdInput = webDriver.findElement(By.cssSelector("#passwd"));
+        passwdInput.sendKeys("Test111");
+
+        WebElement signIn = webDriver.findElement(By.xpath("//button[@id='SubmitLogin']/span"));
+        signIn.click();
+
+        WebElement proceed = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("[action] > p:nth-child(2) span")));
+        actions.click(proceed).build().perform();
+
+        WebElement terms = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("/html//input[@id='cgv']")));
+        actions.click(terms).build().perform();
+
+        WebElement proceed2 = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".standard-checkout span")));
+        actions.click(proceed2).build().perform();
+
+        WebElement payByWire = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a[title='Pay by bank wire'] > span")));
+        actions.click(payByWire).build().perform();
+
+        WebElement confirmPayment = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("p#cart_navigation  span")));
+        actions.click(confirmPayment).build().perform();
 
 
 
