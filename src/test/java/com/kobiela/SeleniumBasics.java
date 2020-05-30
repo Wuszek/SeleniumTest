@@ -2,6 +2,7 @@ package com.kobiela;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.apache.log4j.BasicConfigurator;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -21,6 +22,7 @@ public class SeleniumBasics {
 
     public ChromeDriver webDriver;
     public WebDriverWait wait;
+    public String confirmation_box;
 
     @Before
     public void Setup(){
@@ -41,9 +43,9 @@ public class SeleniumBasics {
 
     @After
     public void tearDown() throws InterruptedException {
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.SECONDS.sleep(3);
         // Wylacz przegladarke
-        //this.webDriver.quit();
+        this.webDriver.quit();
     }
 
 
@@ -139,7 +141,9 @@ public class SeleniumBasics {
         WebElement signInButton = webDriver.findElement(By.linkText("Sign in"));
         signInButton.click();
 
-        WebElement emailInput = webDriver.findElement(By.cssSelector("#email"));
+
+        //WebElement emailInput = webDriver.findElement(By.cssSelector("#email"));
+        WebElement emailInput = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#email")));
         emailInput.sendKeys("test@testowisko.pl");
 
         WebElement passwdInput = webDriver.findElement(By.cssSelector("#passwd"));
@@ -155,10 +159,11 @@ public class SeleniumBasics {
         Assert.assertEquals(pageHeading.getText(), "MY ACCOUNT");
 
         System.out.println("H1 value correct");
+        System.out.println("Test 'login' finished.");
     }
 
     @Test
-    public void testAddToCart() throws InterruptedException {
+    public void AddToCart() throws InterruptedException {
 
         // Actions builded
         Actions actions = new Actions(webDriver);
@@ -169,7 +174,6 @@ public class SeleniumBasics {
         WebElement tishirts = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".first-in-line-xs.submenu-container a[title='T-shirts']")));
         actions.click(tishirts).build().perform();
         //tishirts.click();
-
 
         WebElement price = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".right-block > .content_price > .price.product-price")));
         String tekst = price.getText();
@@ -222,7 +226,48 @@ public class SeleniumBasics {
         actions.click(confirmPayment).build().perform();
 
 
+        WebElement confirmationBox = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div#center_column > .box")));
+        confirmation_box = confirmationBox.getText();
+
+        confirmation_box = confirmation_box.substring(confirmation_box.indexOf("ce") + 3);
+        confirmation_box = confirmation_box.substring(0, confirmation_box.indexOf("in") - 1);
+
+        System.out.println("Order number is: " + confirmation_box);
+        System.out.println("Test 'AddToCart' finished.");
+
+        // Uncomment this block to check how this work if it catches error
+//        confirmation_box = "TEST_ERROR";
+//        System.out.println(confirmation_box + " has been assigned.");
 
     }
+
+    @Test
+    public void checkOrder() throws InterruptedException {
+
+        AddToCart();
+
+        WebElement account = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a[title='View my customer account'] > span")));
+        account.click();
+
+        WebElement orderHistory = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("a[title='Orders'] > span")));
+        orderHistory.click();
+
+        WebElement blockHistory = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div#block-history")));
+        String block = blockHistory.getText();
+
+        try {
+            Assert.assertTrue(block.contains(confirmation_box));
+            System.out.println("There is order " + confirmation_box + " in the order list.");
+        } catch (AssertionError e){
+            System.out.println("There is no order like " + confirmation_box);
+            throw new IllegalArgumentException("There is no order like " + confirmation_box);
+        }
+
+        System.out.println("Test 'checkOrder' finished correct.");
+
+    }
+
+
+
 
 }
